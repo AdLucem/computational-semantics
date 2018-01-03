@@ -1,0 +1,31 @@
+#+TITLE: Model Checking With Predicate Logic
+#+AUTHOR: C.A.L
+
+Oh they fucking finally tell us how predicate logic is going to be applied to natural semantics.
+Yay.
+
+* Predicate Logic as Representation Language
+
+Predicate logic gives us representation for two types:
+
+  - Entities :: Terms
+  - Truth Values :: Formulas
+
+# pg 128, note 1 : is separating complex subjects from simple subjects really a good idea?
+# pg 128, note 2: an appropriate variable for v can be found using those semantic category hierarchies, maybe?
+* Argument Reducing Functions
+
+** Passivisation
+** Reflexive pronouns
+* Evaluating Formulas in Models
+
+How to evaluate formulas of predicate logic with respect to models.
+
+Things needed:
+
+    + Interpretation functions :: 
+      - A function from relation names to appropriate relations in the model
+      - In our implementation, we do not differentiate according to the arity of the relation 
+    + Variable assignments
+
+# lol, I can understand jack shit. I'mma go back to the previous chapter now and study it

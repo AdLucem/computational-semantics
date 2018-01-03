@@ -1,0 +1,4 @@
+#+TITLE: Formal Semantics For Fragments
+#+AUTHOR: C.A.L
+
+* Semantics of Propositional Logic

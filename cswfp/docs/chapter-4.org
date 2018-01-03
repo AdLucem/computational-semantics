@@ -1,0 +1,135 @@
+#+TITLE: Formal Syntax For Fragments
+#+AUTHOR: C.A.L
+
+
+* Predicate Logic
+
+Predicate logic is an extension of propositional logic that allows us to represent entities and connections (relations) between them. It is an extension of propositional logic. Elements of predicate logic are:
+
+  + Structured Basic Propositions ::
+       - An n-ary predicate followed by n variables
+  + Universally Quantified Formula ::
+       - the symbol \-/ ("for all") followed by a variable followed by a formula
+  + Existentially Quantified Formula :: 
+       - The symbol =| followed by a variable followed by a formula
+  + Otherwise same as in propositional logic :: atoms, and, or, not
+
+  + Properties and facts ::
+       -  A predicate logic formula is considered open if it contains at least one variable occurence which is free. 
+       - Otherwise, it is considered closed.
+       - A closed predicate logical formula is also called a predicate logical sentence.
+
+* Formal Definition of Predicate Logic Using CFG
+
+=v --> <variable identifier> | v'=
+
+To reify the concept of <variable identifier>, we choose to represent variables using a, b, c... z. If there are more than 26 variables required then nobody can help you.
+
+=v --> a | b | c .... | z | v'=
+=vlist = [] | v : vlist=
+=P --> P | P'=
+=R --> R | R'=
+=S --> S | S'=
+
+=atom --> P vlist=
+=F --> atom | v = v | ~ F | /\ Flist | \/ Flist | \-/ v F | =| v F=
+=Flist --> [] | F : Flist=   
+ 
+* Adding Function Symbols
+
+Predicate logic, as it is, is not powerful enough to express mathematical operations, as it only allows for simple variables and constants.
+
+* Predicate Logic Implementation
+
+Implementation of Predicate Logic in Haskell.
+
+** Variables
+
+First we define variables. A Variable is defined by values =Name= and =Index= (=Index= will be needed later.)
+
+#+BEGIN_SRC haskell :tangle ../src/PredLogic.hs
+
+  module PredLogic where
+
+  type Name     = String
+  type Index    = [Int]
+
+  data Variable = Variable Name Index deriving (Eq,Ord)
+
+#+END_SRC
+
+To show the variables on screen, we put them in the =Show= class.
+
+#+BEGIN_SRC haskell :tangle ../src/PredLogic.hs
+
+  instance Show Variable where
+    show (Variable name [])  = name
+    show (Variable name [i]) = name ++ show i
+    show (Variable name is ) = name ++ showInts is
+      where showInts []     = ""
+            showInts [i]    = show i
+            showInts (i:is) = show i ++ "_" ++ showInts is
+
+#+END_SRC
+** Formulas
+
+A combination of variables and predicate logic operations is called a =Formula=.
+
+A formula is a parametrized type that takes a term as a parameter.
+
+#+BEGIN_SRC haskell :tangle ../src/PredLogic.hs
+
+  data Formula a =  Atom String [a]
+                  | Eq a a
+                  | Neg  (Formula a)
+                  | Impl (Formula a) (Formula a)
+                  | Equi (Formula a) (Formula a)
+                  | Conj [Formula a]
+                  | Disj [Formula a]
+                  | Forall Variable (Formula a)
+                  | Exists Variable (Formula a)
+                  deriving Eq
+
+#+END_SRC
+
+To make it look pretty on the screen, we define functions to show formulas (assuming the terms of the formula are themselves showable.)
+
+#+BEGIN_SRC haskell :tangle ../src/PredLogic.hs
+
+  instance Show a => Show (Formula a) where
+    show (Atom str []) = str
+    show (Atom str ls) = str ++ show ls
+    show (Eq t1 t2) = " ( " ++ (show t1) ++ " == " ++ (show t2) ++ " ) "
+    show (Neg form) = " ( ~ " ++ (show form) ++ " ) "
+    show (Impl form1 form2) = " ( " ++ (show form1) ++ " ==> " ++ (show form2) ++ " ) "
+    show (Conj []) = "true"
+    show (Conj ls) = " conj " ++ (show ls)
+    show (Disj []) = "false"
+    show (Disj ls) = " disj " ++ (show ls)
+    show (Forall v form) = " \-/ " ++ (show v) ++ (show form) 
+    show (Exists v form) = " =| " ++ (show v) ++ (show form)
+
+#+END_SRC
+
+** Operations
+
+To be able to represent operations on terms - like addition, subtraction, etc- we define a type for =Function constants=, that take a list of formulas or variables as arguments.
+
+Formal definition:
+
+=term --> v | f tlist=
+=f --> F | f'=
+=tlist --> [] | t : tlist=
+
+Implementing the above definition in haskell using a single datatype called =Term= :
+
+#+BEGIN_SRC haskell :tangle ../src/PredLogic.hs
+
+  data Term = Var Variable | Struct String [Term]
+    deriving (Eq, Ord)
+
+  instance Show Term where
+    show (Var v)       = show v
+    show (Struct s []) = s
+    show (Struct s ts) = s ++ show ts
+#+END_SRC
