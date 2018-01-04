@@ -2,6 +2,17 @@
 #+AUTHOR: C.A.L
 
 
+* Language Extensions and Imports
+
+One would think there was a simpler way to manage this.
+
+#+BEGIN_SRC haskell :tangle PredLogic.hs
+
+  module PredLogic where
+
+  import TextProc
+
+#+END_SRC
 * Predicate Logic
 
 Predicate logic is an extension of propositional logic that allows us to represent entities and connections (relations) between them. It is an extension of propositional logic. Elements of predicate logic are:
@@ -49,8 +60,6 @@ First we define variables. A Variable is defined by values =Name= and =Index= (=
 
 #+BEGIN_SRC haskell :tangle ../src/PredLogic.hs
 
-  module PredLogic where
-
   type Name     = String
   type Index    = [Int]
 
@@ -72,7 +81,7 @@ To show the variables on screen, we put them in the =Show= class.
 
 #+END_SRC
 ** Formulas
-
+   
 A combination of variables and predicate logic operations is called a =Formula=.
 
 A formula is a parametrized type that takes a term as a parameter.
@@ -106,8 +115,8 @@ To make it look pretty on the screen, we define functions to show formulas (assu
     show (Conj ls) = " conj " ++ (show ls)
     show (Disj []) = "false"
     show (Disj ls) = " disj " ++ (show ls)
-    show (Forall v form) = " \-/ " ++ (show v) ++ (show form) 
-    show (Exists v form) = " =| " ++ (show v) ++ (show form)
+    show (Forall v form) = " A " ++ (show v) ++ (show form) 
+    show (Exists v form) = " E " ++ (show v) ++ (show form)
 
 #+END_SRC
 
@@ -132,4 +141,116 @@ Implementing the above definition in haskell using a single datatype called =Ter
     show (Var v)       = show v
     show (Struct s []) = s
     show (Struct s ts) = s ++ show ts
+#+END_SRC
+
+** CLI
+
+*** List to Formula
+
+To convert a nested list (representing a predicate logical formula in pre-fix notation) into a formula.
+
+#+BEGIN_SRC haskell :tangle ../src/PredLogic.hs
+
+  toAST :: Ord a => [[a]] -> Formula a 
+  toAST ls = case (head ls) of
+    "=="   -> Eq (toAST $ (head . tail) ls)
+                (toAST $ last ls)
+    "~"    -> Neg (toAST $ last ls)
+    "==>"  -> Impl (toAST $ (head . tail) ls)
+                  (toAST $ last ls)
+    "<=>"  -> Equi (toAST $ (head . tail) ls)
+                  (toAST $ last ls)
+    "conj" -> Conj (map toAST $ tail ls)
+    "disj" -> Disj (map toAST $ tail ls)
+    "A"    -> Forall (Variable ((head . tail) ls) [])
+                    (toAST $ last ls)
+    "E"    -> Exists (Variable ((head . tail) ls) [])
+                    (toAST $ last ls)
+    otherwise -> Atom ((head . tail) ls) (tail ls)
+
+
+#+END_SRC
+
+*** Infix to Prefix
+
+#+BEGIN_SRC haskell :tangle ../src/PredLogic.hs
+
+  -- list of operators in predicate logic
+  opList :: [String]
+  opList = ["conj","disj","~","==","==>","<=>","A","E"]
+
+
+  isOperator, isOperand, isLeftParenthesis, isRightParenthesis :: String -> Bool
+
+  -- | is element an operator
+  isOperator s = s `elem` opList
+
+  -- | is element an operand
+  isOperand s = s `notElem` (opList ++ ["(",")"])
+
+  -- | is element left bracket
+  isLeftParenthesis s = s `elem` ["("]
+
+  -- | is element right bracket
+  isRightParenthesis s = s `elem` [")"]
+
+
+  -- function to determine operator precedence
+  operatorPrecedence :: String -> Int
+  operatorPrecedence "~" = 4
+  operatorPrecedence "conj" = 3
+  operatorPrecedence "disj" = 2
+  operatorPrecedence "==>" = 1
+  operatorPrecedence "<=>" = 1
+  operatorPrecedence "==" = 1
+
+
+  -- | function that using the shunting yard algorithm to convert from infix to postfix notation
+  -- | input, operator list, output list, return list 
+  infToPost :: [String] -> [String] -> [String] -> [String]
+
+  -- when all lists but output empty, reverse output
+  infToPost [] [] outQueue = reverse outQueue
+
+  -- when no more input tokens but still has operator tokens, add them to the output queue
+  infToPost [] (op:ops) outQueue = infToPost [] ops (op:outQueue)
+
+  -- | parsing input tokens
+  infToPost (token:tokens) opStack outQueue
+
+      -- if the token is an operand then put it on the output queue
+      | isOperand token = infToPost tokens opStack (token:outQueue)
+
+      -- if the token is an operator
+      | isOperator token = case opStack of
+
+          -- if operator stack is empty then add the operator to the stack
+          [] -> infToPost tokens (token:opStack) outQueue
+
+          -- | if the operator stack isn't empty compare precedence with operator on top of opStack
+          -- note: all operators are right-associative
+          (op2:ops) -> if ((operatorPrecedence token) < (operatorPrecedence op2))
+                       then infToPost (token:tokens) ops (op2:outQueue)
+                       else infToPost tokens (token:opStack) outQueue
+
+      -- if token is left bracket  then push onto operator stack
+      | isLeftParenthesis token = infToPost tokens (token:opStack) outQueue
+
+      -- if token is right bracket then check operator stack 
+      | isRightParenthesis token = case opStack of
+          -- if top of operator stack is left bracket then just pop
+          ("(":ops) ->  infToPost tokens ops outQueue
+          -- pop from operator stack and push into output queue till reach left bracket
+          (op:ops) -> infToPost (token:tokens) ops (op:outQueue)
+#+END_SRC
+*** Preprocessing
+
+#+BEGIN_SRC haskell :tangle ../src/PredLogic.hs 
+
+  -- function to convert a string
+  -- to a predicate logical formula
+  predPreprocess :: String -> [String]
+  predPreprocess exp = infToPost (words exp) [] []   
+
+
 #+END_SRC

@@ -4,7 +4,8 @@
 
 * Language Extensions and Imports
 
-#+BEGIN_SRC haskell :tangle ../src/count.hs
+#+BEGIN_SRC haskell :tangle ../src/TextProc.hs
+module TextProc where
 
 import qualified Data.List as L
 import qualified Data.Char as C
@@ -15,9 +16,9 @@ import qualified Data.Char as C
 # I am going through this section in particular because my understanding of text 
 # processing in Haskell is pretty poor
 
-** Sample Data
+** Test Data
 
-#+BEGIN_SRC haskell :tangle ../src/count.hs
+#+BEGIN_SRC haskell :tangle ../src/TestProc.hs
 
 sonnet18 = "Shall I compare thee to a summer’s day? \n"
   ++ "Thou art more lovely and more temperate: \n"
@@ -58,7 +59,7 @@ To count frequencies of occurrences of certain features in a word/text- as in, t
 
 These are both done by one function - a polymorphic function that can count any data type for which equality tests are possible.
 
-#+BEGIN_SRC haskell :tangle ../src/count.hs
+#+BEGIN_SRC haskell :tangle ../src/TextProc.hs
 
 
   count :: Eq a => a -> [a] -> Int
@@ -71,7 +72,7 @@ These are both done by one function - a polymorphic function that can count any 
 
 A function to compute the average of all numbers in a list.
 
-#+BEGIN_SRC haskell :tangle ../src/count.hs
+#+BEGIN_SRC haskell :tangle ../src/TextProc.hs
 
 average :: [Int] -> Float
 average [] = error "Empty List"
@@ -81,7 +82,7 @@ average xs = fromRational (toRational (sum xs) / toRational (length xs))
 
 To find out the average length of words in a string.
 
-#+BEGIN_SRC haskell :tangle ../src/count.hs
+#+BEGIN_SRC haskell :tangle ../src/TextProc.hs
 
   averageLength :: String -> Float
   averageLength str = average $ map length $ words str 
@@ -90,7 +91,7 @@ To find out the average length of words in a string.
 
 To check if a list A is a prefix of a list B.
 
-#+BEGIN_SRC haskell :tangle ../src/count.hs
+#+BEGIN_SRC haskell :tangle ../src/TextProc.hs
 
   prefix :: Eq a => [a] -> [a] -> Bool
   prefix [] ys = True
@@ -101,7 +102,7 @@ To check if a list A is a prefix of a list B.
 
 *** Sublist
 
-#+BEGIN_SRC haskell :tangle ../src/count.hs
+#+BEGIN_SRC haskell :tangle ../src/TextProc.hs
 
 
   sublist :: Eq a => [a] -> [a] -> Bool
@@ -113,7 +114,7 @@ To check if a list A is a prefix of a list B.
 
 Function to remove duplicates in a list.
 
-#+BEGIN_SRC haskell :tangle ../src/count.hs
+#+BEGIN_SRC haskell :tangle ../src/TextProc.hs
 
   nub :: Eq a => [a] -> [a]
   nub [] = []
@@ -124,7 +125,7 @@ Function to remove duplicates in a list.
 
 Functions to preprocess a string before analysing it.
 
-#+BEGIN_SRC haskell :tangle ../src/count.hs
+#+BEGIN_SRC haskell :tangle ../src/TextProc.hs
 
   -- to remove everything but alphanumeric characters
   preprocess :: String -> String
@@ -142,7 +143,7 @@ Count for words occurring more than once in a text.
 
 # try to extend this to other types of sequences, like letters?
 
-#+BEGIN_SRC haskell :tangle ../src/count.hs
+#+BEGIN_SRC haskell :tangle ../src/TextProc.hs
 
   cnt :: String -> [(String, Int)]
   cnt sonnet = [ (x,y) | x <- (process . preprocess) sonnet,
@@ -163,7 +164,7 @@ The exercise is:
 The vowel harmony in Yawelmani has the following shape: suffix vowels agree in backness and roundedness with the stem vowel.   However,  trigger and target of this harmony have to be of the same height.  Thus, high stem vowels condition harmony on high suffix vowels but not on low ones, and low stem vowels condition harmony only on low suffix vowels, cf. the following examples:
 
   xil  ++ hin  → xilhin   ‘tangles’
-  dub  ++ hin  → dubhun   ‘leads by the hand’
+  dub  ++ hin  → dubhun   ‘leads by the hand'
   xat  ++ al   → xatal    ‘might eat’ 
   bok’ ++ al   → bok’ol   ‘might find’
   xat  ++ in   → xathin   ‘eats’
