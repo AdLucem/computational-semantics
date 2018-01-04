@@ -1,3 +1,4 @@
+
 type Name     = String
 type Index    = [Int]
 
@@ -43,23 +44,6 @@ instance Show Term where
   show (Struct s []) = s
   show (Struct s ts) = s ++ show ts
 
---toAST :: Ord a => [[a]] -> Formula a 
-toAST ls = case (head ls) of
-  "=="   -> Eq (toAST $ (head . tail) ls)
-              (toAST $ last ls)
-  "~"    -> Neg (toAST $ last ls)
-  "==>"  -> Impl (toAST $ (head . tail) ls)
-                (toAST $ last ls)
-  "<=>"  -> Equi (toAST $ (head . tail) ls)
-                (toAST $ last ls)
-  "conj" -> Conj (map toAST $ tail ls)
-  "disj" -> Disj (map toAST $ tail ls)
-  "A"    -> Forall (Variable ((head . tail) ls) [])
-                  (toAST $ last ls)
-  "E"    -> Exists (Variable ((head . tail) ls) [])
-                  (toAST $ last ls)
-  otherwise -> Atom ((head . tail) ls) (tail ls)
-
 -- list of operators in predicate logic
 opList :: [String]
 opList = ["conj","disj","~","==","==>","<=>","A","E"]
@@ -88,6 +72,7 @@ operatorPrecedence "disj" = 2
 operatorPrecedence "==>" = 1
 operatorPrecedence "<=>" = 1
 operatorPrecedence "==" = 1
+operatorPrecedence x = 0
 
 
 -- | function that using the shunting yard algorithm to convert from infix to postfix notation
@@ -131,4 +116,4 @@ infToPost (token:tokens) opStack outQueue
 -- function to convert a string
 -- to a predicate logical formula
 predPreprocess :: String -> [String]
-predPreprocess exp = infToPost (words exp) [] []
+predPreprocess exp = reverse $ infToPost (words exp) [] []
